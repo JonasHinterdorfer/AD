@@ -65,7 +65,7 @@ def login():
             flash('No such account!', 'error')
             return render_template('login.html')
 
-        if user.password == password:
+        if check_password_hash(user.password, password):
             login_user(user)
             return redirect(url_for('dashboard'))
 
@@ -89,7 +89,7 @@ def register():
             flash('Username already exists!', 'error')
             return redirect(url_for('login'))
 
-        db.session.add(User(username=username, password=password))
+        db.session.add(User(username=username, password=generate_password_hash(password)))
         db.session.commit()
 
         flash('Registration successful!', 'success')
