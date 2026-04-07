@@ -8,6 +8,7 @@ import os
 import subprocess
 from datetime import datetime
 from werkzeug.security import check_password_hash, generate_password_hash
+from Crypto.Util.number import bytes_to_long
 
 KEY = secrets.token_bytes(32)
 
@@ -186,7 +187,12 @@ def export_transactions_pdf():
             'Content-Disposition': 'attachment; filename="recent-transactions.pdf"',
         },
     )
-
+@app.route('/api/v1/debug/lcg')
+@login_required
+def lcg_route():
+    lcg_gen = LCG()
+    random_bytes = lcg_gen(8)
+    return [bytes_to_long(random_bytes[:4]), bytes_to_long(random_bytes[4:])]
 
 @app.route('/logout')
 @login_required
