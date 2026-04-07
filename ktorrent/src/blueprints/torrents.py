@@ -1,5 +1,6 @@
 import base64
 import hashlib
+import hmac
 import os
 
 from flask import (
@@ -193,14 +194,22 @@ def api_torrent_detail(id):
 
 
 @torrents_bp.route('/api/torrent/<int:id>/export')
+@login_required
 def api_torrent_export(id):
     """Export torrent file for external tools."""
     torrent = Torrent.query.get_or_404(id)
 
+    if not current_user.is_friend_of(torrent.uploader):
+        return jsonify({'error': 'Friendship required'}), 403
+
     token = request.args.get('token', '')
-    secret = current_app.config['SECRET_KEY'][:8]
-    expected = hashlib.md5((torrent.info_hash + secret).encode()).hexdigest()
-    if token != expected:
+    secret = current_app.config['SECRET_KEY']
+    expected = hmac.new(
+        secret.encode('utf-8'),
+        torrent.info_hash.encode('utf-8'),
+        hashlib.sha256,
+    ).hexdigest()
+    if not hmac.compare_digest(token, expected):
         return jsonify({'error': 'Invalid or missing token'}), 403
 
     torrent_path = os.path.join(
@@ -223,12 +232,21 @@ def api_torrent_export(id):
 @login_required
 def preview(filename):
     """Preview file contents."""
-    filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+    # Only allow previewing registered original files (not arbitrary paths / .torrent files)
+    torrent = Torrent.query.filter_by(filename=filename).first()
+    if not torrent:
+        abort(404)
+
+    if not current_user.is_friend_of(torrent.uploader):
+        abort(403)
+
+    upload_folder = os.path.abspath(current_app.config['UPLOAD_FOLDER'])
+    filepath = os.path.abspath(os.path.join(upload_folder, torrent.filename))
+    if not filepath.startswith(upload_folder + os.sep):
+        abort(403)
     if not os.path.isfile(filepath):
         abort(404)
-    torrent = Torrent.query.filter_by(filename=filename).first()
-    if torrent and not current_user.is_friend_of(torrent.uploader):
-        abort(403)
+
     try:
         with open(filepath, 'r', errors='replace') as f:
             content = f.read(4096)

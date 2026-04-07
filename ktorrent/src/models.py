@@ -65,7 +65,8 @@ class User(UserMixin, db.Model):
             db.or_(
                 db.and_(Friendship.requester_id == self.id, Friendship.addressee_id == other.id),
                 db.and_(Friendship.requester_id == other.id, Friendship.addressee_id == self.id),
-            )
+            ),
+            Friendship.status == 'accepted',
         ).first() is not None
 
     @property

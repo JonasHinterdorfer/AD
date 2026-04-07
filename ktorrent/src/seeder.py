@@ -39,11 +39,12 @@ def generate_peer_id():
 class SeederProtocol:
     """Handles a single peer connection for seeding."""
 
-    def __init__(self, reader, writer, torrents_info, upload_folder):
+    def __init__(self, reader, writer, torrents_info, upload_folder, announce_timeout):
         self.reader = reader
         self.writer = writer
         self.torrents_info = torrents_info  # {info_hash_bytes: {filepath, piece_length, file_size, num_pieces}}
         self.upload_folder = upload_folder
+        self.announce_timeout = announce_timeout
         self.peer_id = generate_peer_id()
         self.info_hash = None
         self.torrent_info = None
@@ -81,9 +82,27 @@ class SeederProtocol:
             return
 
         info_hash = data[28:48]
+        client_peer_id = data[48:68]
 
         if info_hash not in self.torrents_info:
             logger.debug(f'Unknown info_hash from {self.addr}: {info_hash.hex()}')
+            return
+
+        # Require recent tracker announce for this torrent/peer_id
+        try:
+            from models import peers as tracker_peers
+            torrent_peers = tracker_peers.get(info_hash.hex(), {})
+            now = time.time()
+            authorized = any(
+                p.get('peer_id') == client_peer_id and
+                (now - p.get('last_announce', 0)) <= self.announce_timeout
+                for p in torrent_peers.values()
+            )
+            if not authorized:
+                logger.debug(f'Unauthorized handshake from {self.addr} for {info_hash.hex()}')
+                return
+        except Exception as e:
+            logger.debug(f'Auth check failed for {self.addr}: {e}')
             return
 
         self.info_hash = info_hash
@@ -187,8 +206,8 @@ class SeederProtocol:
         await self.writer.drain()
 
 
-async def _handle_client(reader, writer, torrents_info, upload_folder):
-    protocol = SeederProtocol(reader, writer, torrents_info, upload_folder)
+async def _handle_client(reader, writer, torrents_info, upload_folder, announce_timeout):
+    protocol = SeederProtocol(reader, writer, torrents_info, upload_folder, announce_timeout)
     await protocol.handle()
 
 
@@ -196,12 +215,13 @@ async def run_seeder(app):
     """Main async function running the seeder server, announcer, and DB poller."""
     seeder_port = app.config['SEEDER_PORT']
     upload_folder = app.config['UPLOAD_FOLDER']
+    announce_timeout = app.config.get('TRACKER_PEER_TIMEOUT', 120)
 
     # Shared state: {info_hash_bytes: {filepath, piece_length, file_size, num_pieces, passkey}}
     torrents_info = {}
 
     async def client_handler(reader, writer):
-        await _handle_client(reader, writer, torrents_info, upload_folder)
+        await _handle_client(reader, writer, torrents_info, upload_folder, announce_timeout)
 
     server = await asyncio.start_server(client_handler, '0.0.0.0', seeder_port)
     logger.info(f'Seeder listening on port {seeder_port}')
