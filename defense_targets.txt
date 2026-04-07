@@ -1,0 +1,5 @@
+# Your own defense/self-check IPs.
+# Flags retrieved from these targets are NEVER submitted.
+# One IPv4 per line (labels allowed).
+
+# team10 10.60.10.2

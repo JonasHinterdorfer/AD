@@ -1,0 +1,11 @@
+# Put one target IP per line. You can also keep labels/text; the parser extracts IPv4.
+
+team01 10.60.1.2
+team02 10.60.2.2
+team03 10.60.3.2
+team04 10.60.4.2
+team05 10.60.5.2
+team06 10.60.6.2
+team07 10.60.7.2
+team08 10.60.8.2
+team09 10.60.9.2
