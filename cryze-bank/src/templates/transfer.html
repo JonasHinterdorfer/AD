@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Transfer - CryzeBank</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='transfer.css') }}">
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="brand">CryzeBank</div>
+        <div class="header-actions">
+            <div class="user">Welcome, <strong>{{ current_user.username }}</strong></div>
+            <a class="btn small outline" href="/dashboard">Back to Dashboard</a>
+            <a class="btn small" href="/logout">Logout</a>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <section class="card transfer-card">
+            <h1>New Transfer</h1>
+            <p class="transfer-subtitle">Create a transfer and encrypt the transfer note before sending.</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <ul class="flash-{{ 'success' if category == 'success' else 'error' }}">
+                            <li>{{ message }}</li>
+                        </ul>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form action="/transfer" method="POST" class="transfer-form">
+                <label for="recipient">Recipient</label>
+                <input id="recipient" name="recipient" type="text" required>
+
+                <label for="amount">Amount</label>
+                <input id="amount" name="amount" type="text" placeholder="250" required>
+                <input id="method" type="hidden" value="-" name="method">
+
+                <label for="message">Transfer Note (optional)</label>
+                <textarea id="message" name="message" rows="4" placeholder="Invoice 1337"></textarea>
+
+                <button class="btn" type="submit">Create Transfer</button>
+            </form>
+        </section>
+
+        {% if transfer_result %}
+        <section class="card transfer-result">
+            <h2>Transfer Summary</h2>
+            <p><strong>Recipient:</strong> {{ transfer_result.recipient }}</p>
+            <p><strong>Amount:</strong> {{ transfer_result.amount }}</p>
+            <div class="encrypted-box">{{ transfer_result.encrypted_message }}</div>
+        </section>
+        {% endif %}
+    </main>
+</body>
+</html>

@@ -1,0 +1,59 @@
+{% extends 'dashboard_base.html' %}
+
+{% block dashboard_header %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Notes</h1>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="row">
+
+  {% for credential in credentials %}
+  <div class="col-6 d-flex align-items-stretch flex-column" id="card-{{ credential[3] }}">
+    <div class="card bg-light d-flex flex-fill">
+      <div class="card-header text-muted border-bottom-0">Notes</div>
+      <div class="card-body pt-0">
+        <div class="row">
+
+          <div class="col-12">
+            <h2 class="lead"><b></b></h2>
+            <textarea class="p-3 codeMirrorDemo">{{ credential[0] }}</textarea>
+          </div>
+
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="text-left">
+          <div class="row">
+            <div class="col-1">
+              <form action="raw/{{ credential[1] }}" method="get">
+                <button class="btn btn-sm btn-warning" data-id="{{ credential[3] }}">
+                  <i class="fas fa-copy"></i>
+                </button>
+              </form>
+
+            </div>
+            <div class="col-1">
+              <form action="delete/{{ credential[1] }}" method="post">
+                <button class="btn btn-sm btn-danger delete-btn" data-id="{{ credential[3] }}">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  {% endfor %}
+
+</div>
+{% endblock %}

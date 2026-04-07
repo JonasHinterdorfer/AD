@@ -1,0 +1,43 @@
+{% extends 'dashboard_base.html' %}
+
+{% block dashboard_header %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Add Note</h1>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+
+{% block dashboard_content %}
+
+<div class="card">
+  <form action="add_note" method="post">
+    <div class="card-body">
+
+      <div class="row">
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary btn-block">Save</button>
+        </div>
+      </div>
+
+      <textarea id="summernote" name="note">Place your note here :)</textarea>
+    </div>
+  </form>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  $(function () {
+    // Summernote
+    $('#summernote').summernote()
+  })
+</script>
+{% endblock %}

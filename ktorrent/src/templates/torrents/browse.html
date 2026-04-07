@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Browse Torrents — KTorrent{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Browse Torrents</h2>
+
+<!-- Search & Sort -->
+<form method="GET" class="row g-3 mb-4">
+    <div class="col-md-6">
+        <input type="text" class="form-control" name="search" value="{{ search }}" placeholder="Search torrents...">
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" name="sort">
+            <option value="newest" {{ 'selected' if sort == 'newest' }}>Newest</option>
+            <option value="oldest" {{ 'selected' if sort == 'oldest' }}>Oldest</option>
+            <option value="name" {{ 'selected' if sort == 'name' }}>Name</option>
+            <option value="size" {{ 'selected' if sort == 'size' }}>Size</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-accent w-100">Search</button>
+    </div>
+</form>
+
+{% if torrents %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Name</th>
+                <th>Size</th>
+                <th>Uploader</th>
+                <th>S/L</th>
+                <th>Uploaded</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for torrent in torrents %}
+            <tr>
+                <td>
+                    {% if current_user.is_friend_of(torrent.uploader) %}
+                    <span class="text-accent" title="You can download this">&#128275;</span>
+                    {% else %}
+                    <span class="text-muted" title="Befriend uploader to download">&#128274;</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('torrents.detail', id=torrent.id) }}">{{ torrent.name }}</a>
+                </td>
+                <td>{{ torrent.file_size|human_size }}</td>
+                <td>
+                    <a href="{{ url_for('auth.user_profile', username=torrent.uploader.username) }}">{{ torrent.uploader.username }}</a>
+                </td>
+                <td>
+                    <span class="text-success">{{ torrent.seeders() }}</span> /
+                    <span class="text-warning">{{ torrent.leechers() }}</span>
+                </td>
+                <td>{{ torrent.created_at|time_ago }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if pagination.pages > 1 %}
+<nav>
+    <ul class="pagination justify-content-center">
+        {% if pagination.has_prev %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('torrents.browse', page=pagination.prev_num, search=search, sort=sort) }}">Previous</a>
+        </li>
+        {% endif %}
+        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+            <li class="page-item {{ 'active' if page_num == pagination.page }}">
+                <a class="page-link" href="{{ url_for('torrents.browse', page=page_num, search=search, sort=sort) }}">{{ page_num }}</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+            {% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('torrents.browse', page=pagination.next_num, search=search, sort=sort) }}">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="text-center py-5 text-muted">
+    <h5>No torrents found</h5>
+    <p>{% if search %}Try a different search term or {% endif %}<a href="{{ url_for('torrents.upload') }}">upload something</a>!</p>
+</div>
+{% endif %}
+{% endblock %}

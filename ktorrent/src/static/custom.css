@@ -1,0 +1,70 @@
+:root {
+    --accent: #00d4aa;
+    --accent-hover: #00b894;
+}
+
+.btn-accent {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+}
+
+.btn-accent:hover {
+    background-color: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: #000;
+}
+
+.btn-outline-accent {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.btn-outline-accent:hover {
+    background-color: var(--accent);
+    color: #000;
+}
+
+.bg-accent {
+    background-color: var(--accent) !important;
+    color: #000 !important;
+}
+
+.text-accent {
+    color: var(--accent) !important;
+}
+
+.navbar-brand {
+    color: var(--accent) !important;
+    font-weight: 700;
+}
+
+a {
+    color: var(--accent);
+}
+
+a:hover {
+    color: var(--accent-hover);
+}
+
+.page-link {
+    color: var(--accent);
+}
+
+.page-item.active .page-link {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+}
+
+.table a {
+    text-decoration: none;
+}
+
+.table a:hover {
+    text-decoration: underline;
+}
+
+.card {
+    border-color: rgba(255, 255, 255, 0.1);
+}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ user.username }} — KTorrent{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h3>{{ user.username }}</h3>
+                        <p class="text-muted mb-1">Joined {{ user.created_at|time_ago }}</p>
+                        <p class="text-muted">{{ user.torrents.count() }} upload{{ 's' if user.torrents.count() != 1 }} &middot; {{ user.friends|length }} friend{{ 's' if user.friends|length != 1 }}</p>
+                    </div>
+                    {% if not own %}
+                    <div>
+                        {% if current_user.is_friend_of(user) %}
+                        <form method="POST" action="{{ url_for('friends.unfriend', user_id=user.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-outline-danger btn-sm" data-confirm="Unfriend {{ user.username }}?">Unfriend</button>
+                        </form>
+                        {% else %}
+                        <form method="POST" action="{{ url_for('friends.add_friend', user_id=user.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-accent btn-sm">Add Friend</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if user.bio %}
+                <hr>
+                <p>{{ user.bio }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if own %}
+        <!-- Edit Bio -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5>Edit Profile</h5>
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.bio.label(class="form-label") }}
+                        {{ form.bio(class="form-control", rows=3, placeholder="Tell your friends about yourself...") }}
+                        {% for error in form.bio.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {{ form.submit(class="btn btn-accent") }}
+                </form>
+            </div>
+        </div>
+
+        <!-- Passkey -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5>Passkey</h5>
+                <p class="text-muted small">Your passkey is embedded in downloaded .torrent files. Keep it private.</p>
+                <div class="input-group mb-3">
+                    <input type="password" class="form-control" id="passkey-input" value="{{ user.passkey }}" readonly>
+                    <button class="btn btn-outline-secondary" type="button" id="passkey-toggle">Show</button>
+                </div>
+                <form method="POST" action="{{ url_for('auth.regenerate_passkey') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-outline-warning btn-sm" data-confirm="Regenerate passkey? Your existing .torrent files will stop working.">Regenerate Passkey</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

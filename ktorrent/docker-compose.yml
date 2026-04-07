@@ -1,0 +1,24 @@
+services:
+  ktorrent:
+    build:
+      context: src
+    restart: unless-stopped
+    ports:
+      - "81:5000"
+      - "82:6881"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./instance:/app/instance
+    environment:
+      - SECRET_KEY=change-me-in-production
+      - TRACKER_HOST=0.0.0.0
+      - TRACKER_ANNOUNCE_URL=http://127.0.0.1:81/announce
+      - SEEDER_PORT=82
+      - SEEDER_EXTERNAL_HOST=127.0.0.1
+      - SEEDER_ENABLED=1
+    networks:
+      - ktorrent_net
+
+networks:
+  ktorrent_net:
+    name: ktorrent_net

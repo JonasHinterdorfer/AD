@@ -1,0 +1,20 @@
+services:
+  cryze-bank:
+    platform: linux/amd64
+    container_name: cryze-bank
+    restart: unless-stopped
+    build:
+      context: src
+    ports:
+      - "83:5000"
+    volumes:
+      - cryze-data:/app/data
+    networks:
+      - cryze_bank_net
+
+volumes:
+  cryze-data:
+
+networks:
+  cryze_bank_net:
+    name: cryze_bank_net

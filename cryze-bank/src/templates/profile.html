@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - CryzeBank</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}">
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="brand">CryzeBank</div>
+        <div class="header-actions">
+            <div class="user">Welcome, <strong>{{ current_user.username }}</strong></div>
+            <a class="btn small outline" href="/dashboard">Back to Dashboard</a>
+            <a class="btn small" href="/logout">Logout</a>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <section class="card profile-card">
+            <h1>Profile</h1>
+            <p class="profile-subtitle">Rough draft page to view and edit your account profile details.</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <ul class="flash-{{ 'success' if category == 'success' else 'error' }}">
+                            <li>{{ message }}</li>
+                        </ul>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form action="/profile" method="POST" class="profile-form">
+                <label for="full_name">Full Name</label>
+                <input id="full_name" name="full_name" type="text" value="{{ profile.full_name }}" required>
+
+                <label for="email">Email</label>
+                <input id="email" name="email" type="text" value="{{ profile.email }}" placeholder="name@example.com">
+
+                <label for="phone">Phone</label>
+                <input id="phone" name="phone" type="text" value="{{ profile.phone }}" placeholder="+43 123 456789">
+
+                <label for="bio">Bio</label>
+                <textarea id="bio" name="bio" rows="4" placeholder="Tell us a bit about yourself">{{ profile.bio }}</textarea>
+
+                <button class="btn" type="submit">Save Profile</button>
+            </form>
+        </section>
+
+        <section class="card profile-preview">
+            <h2>Current Profile Snapshot</h2>
+            <p><strong>Username:</strong> {{ current_user.username }}</p>
+            <p><strong>Name:</strong> {{ profile.full_name or '-' }}</p>
+            <p><strong>Email:</strong> {{ profile.email or '-' }}</p>
+            <p><strong>Phone:</strong> {{ profile.phone or '-' }}</p>
+            <p><strong>Bio:</strong> {{ profile.bio or '-' }}</p>
+        </section>
+    </main>
+</body>
+</html>

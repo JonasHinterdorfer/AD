@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryzeBank</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+        <div class="container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <ul class="flash-{{ 'success' if category == 'success' else 'error' }}">
+                                <li>{{ message }}</li>
+                            </ul>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+        <h1>Cryze Bank</h1>
+        <div class="muted">Your trusted partner in financial services.<br>The most secure banking application!</div>
+        <div class="tabs">
+            <button class="tab active" id="loginTab" onclick="showTab('login')">Login</button>
+            <button class="tab" id="registerTab" onclick="showTab('register')">Register</button>
+        </div>
+    <form id="loginForm" action="/login" method="POST">
+            <label for="login-username">Username</label>
+            <input id="login-username" name="username" type="text" autocomplete="username" required>
+            <label for="login-password">Password</label>
+            <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+            <button class="btn" type="submit">Login</button>
+        </form>
+    <form id="registerForm" action="/register" method="POST" style="display:none">
+            <label for="register-username">Username</label>
+            <input id="register-username" name="username" type="text" autocomplete="username" required>
+            <label for="register-password">Password</label>
+            <input id="register-password" name="password" type="password" autocomplete="new-password" required>
+            <button class="btn" type="submit">Register</button>
+        </form>
+    </div>
+    <script>
+        function showTab(tab) {
+            document.getElementById('loginTab').classList.toggle('active', tab==='login');
+            document.getElementById('registerTab').classList.toggle('active', tab==='register');
+            document.getElementById('loginForm').style.display = tab==='login' ? '' : 'none';
+            document.getElementById('registerForm').style.display = tab==='register' ? '' : 'none';
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+{% extends 'dashboard_base.html' %}
+
+{% block dashboard_header %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Lookup Note</h1>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+
+{% block dashboard_content %}
+
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Search Passwords</h2>
+  </div>
+
+
+  <form action="search_note" method="post">
+
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-10">
+          <div class="form-group">
+            <input type="text" class="form-control" name="search">
+          </div>
+        </div>
+
+        <div class="col-md-2">
+          <div class="form-group">
+            <button type="submit" class="btn btn-primary btn-block">Search</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </form>
+
+
+
+</div>
+
+{% if error_msg %}
+<div class="alert alert-danger alert-dismissible">
+  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+  <h5><i class="icon fas fa-ban"></i> Error!</h5>
+  {% autoescape false %}
+  Unknown Searchtype {{ error_msg }}
+  {% endautoescape %}
+</div>
+{% endif %}
+
+<div class="row">
+
+  {% for note in notes%}
+  <div class="col-6 d-flex align-items-stretch flex-column" id="card-{{ note[3] }}">
+    <div class="card bg-light d-flex flex-fill">
+      <div class="card-header text-muted border-bottom-0">Notes</div>
+      <div class="card-body pt-0">
+        <div class="row">
+
+          <div class="col-12">
+            <h2 class="lead"><b></b></h2>
+            <textarea class="p-3 codeMirrorDemo">{{ note[0] }}</textarea>
+          </div>
+
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="text-left">
+          <div class="row">
+            <div class="col-1">
+              <form action="raw/{{ note[1] }}" method="get">
+                <button class="btn btn-sm btn-warning" data-id="{{ note[3] }}">
+                  <i class="fas fa-copy"></i>
+                </button>
+              </form>
+
+            </div>
+            <div class="col-1">
+              <form action="delete/{{ note[1] }}" method="post">
+                <button class="btn btn-sm btn-danger delete-btn" data-id="{{ note[3] }}">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  {% endfor %}
+
+</div>
+
+
+<!--
+  <form action="search_password" method="post">
+    <div class="card-body">
+
+      <div class="input-group mb-12">
+        <div class="mb-4">
+          <input type="text" class="form-control" name="search">
+        </div>
+
+
+        <div class="mb-4">
+          <select class="form-control select2" style="width: 100%;">
+            <option selected="selected">Site</option>
+            <option>Email</option>
+            <option>Password</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-4">
+          <button type="submit" class="btn btn-primary btn-block">Search</button>
+        </div>
+      </div>
+
+    </div>
+  </form>
+  -->
+
+</div>
+
+{% endblock %}

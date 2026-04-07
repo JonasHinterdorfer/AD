@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Preview: {{ filename }} — KTorrent{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Preview: {{ filename }}</span>
+        <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary">Back</a>
+    </div>
+    <div class="card-body">
+        <pre class="mb-0" style="max-height: 600px; overflow: auto;">{{ content }}</pre>
+    </div>
+</div>
+{% endblock %}

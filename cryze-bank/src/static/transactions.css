@@ -1,0 +1,80 @@
+.transactions-card {
+    max-width: 980px;
+    margin: 0 auto;
+}
+
+.transactions-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.transactions-card h1 {
+    margin: 0;
+    text-align: left;
+    font-size: 1.5rem;
+}
+
+.transactions-subtitle {
+    margin: 6px 0 16px;
+    color: var(--muted);
+}
+
+.table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.transactions-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+}
+
+.transactions-table th,
+.transactions-table td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+}
+
+.transactions-table th {
+    color: #324963;
+    font-size: 0.88rem;
+    letter-spacing: 0.01em;
+    background: var(--surface-alt);
+}
+
+.transactions-table td {
+    font-size: 0.92rem;
+    vertical-align: middle;
+    color: #2f4159;
+}
+
+.transactions-table td.encrypted-cell {
+    max-width: 360px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.transactions-empty {
+    margin: 0;
+}
+
+@media (max-width: 640px) {
+    .transactions-head {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .transactions-head .btn {
+        width: 100%;
+    }
+
+    .transactions-card {
+        margin-top: 0;
+    }
+}

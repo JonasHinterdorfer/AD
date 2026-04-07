@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recent Transactions - CryzeBank</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='transactions.css') }}">
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="brand">CryzeBank</div>
+        <div class="header-actions">
+            <div class="user">Welcome, <strong>{{ current_user.username }}</strong></div>
+            <a class="btn small outline" href="/dashboard">Back to Dashboard</a>
+            <a class="btn small" href="/logout">Logout</a>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <section class="card transactions-card">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <ul class="flash-{{ 'success' if category == 'success' else 'error' }}">
+                            <li>{{ message }}</li>
+                        </ul>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="transactions-head">
+                <div>
+                    <h1>Recent Transactions</h1>
+                    <p class="transactions-subtitle">This list contains transfers created via the transfer form.</p>
+                </div>
+                {% if not export_mode and recent_transactions %}
+                <form action="/transactions/export" method="post" style="display:inline;">
+                    <button type="submit" class="btn small">Export</button>
+                </form>
+                {% endif %}
+            </div>
+
+            {% if recent_transactions %}
+            <div class="table-wrap">
+                <table class="transactions-table">
+                    <thead>
+                        <tr>
+                            <th>Created</th>
+                            <th>Recipient</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Note</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tx in recent_transactions %}
+                        <tr>
+                            <td>{{ tx.created_at | safe}}</td>
+                            <td>{{ tx.recipient }}</td>
+                            <td>{{ tx.amount | safe }}€</td>
+                            <td>{{ tx.method | safe }}</td>
+                            <td class="encrypted-cell">{{ tx.encrypted_message or '-' }}</td>
+                            <td><a class="btn small outline" href="/transaction/{{ tx.id }}">View</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="muted transactions-empty">No transactions yet. Create one from the transfer page.</p>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>

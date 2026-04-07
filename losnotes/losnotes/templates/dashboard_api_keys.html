@@ -1,0 +1,85 @@
+{% extends 'dashboard_base.html' %}
+
+{% block dashboard_header %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>API Keys</h1>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Your API Keys</h3>
+    <div class="card-tools">
+      <button class="btn btn-primary btn-sm" id="createKeyBtn">
+        <i class="fas fa-plus"></i> Create API Key
+      </button>
+    </div>
+  </div>
+  <div class="card-body">
+    <div id="newKeyAlert" class="alert alert-success d-none">
+      <strong>New API Key:</strong> <code id="newKeyValue"></code>
+      <br><small class="text-muted">Copy this key now. You can view it later on this page.</small>
+    </div>
+    <table class="table table-bordered" id="keysTable">
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for key in api_keys %}
+        <tr id="key-row-{{ key.id }}">
+          <td><code>{{ key.key }}</code></td>
+          <td>{{ key.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td>
+            <button class="btn btn-sm btn-danger delete-key-btn" data-key-id="{{ key.id }}">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(function() {
+  $('#createKeyBtn').click(function() {
+    $.ajax({
+      url: '/api/keys',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({}),
+      success: function(data) {
+        $('#newKeyValue').text(data.key);
+        $('#newKeyAlert').removeClass('d-none');
+        location.reload();
+      }
+    });
+  });
+
+  $('.delete-key-btn').click(function() {
+    var keyId = $(this).data('key-id');
+    $.ajax({
+      url: '/api/keys/' + keyId,
+      method: 'DELETE',
+      success: function() {
+        $('#key-row-' + keyId).remove();
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

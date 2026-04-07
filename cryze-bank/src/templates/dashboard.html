@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryzeBank Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='transactions.css') }}">
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="brand">CryzeBank</div>
+        <div class="header-actions">
+            <div class="user">Welcome, <strong>{{ current_user.username }}</strong></div>
+            <a class="btn small" href="/logout">Logout</a>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <section class="account-summary card">
+            <div class="summary-left">
+                <div class="summary-heading-row">
+                    <h1>Account Overview</h1>
+                </div>
+
+            </div>
+            <div class="summary-right">
+                <a class="btn" href="/transfer">New Transfer</a>
+            </div>
+        </section>
+
+        <section class="tiles-grid">
+            <article class="tile card">
+                <div class="tile-icon">INFO</div>
+                <h3>Account Info</h3>
+                <p>Username: <strong>{{ current_user.username }}</strong></p>
+                <p>IBAN: AT04 **** **** **** 1337</p>
+                <p>Card Number: 5356 **** **** 6767</p>
+            </article>
+
+            <article class="tile card">
+                <div class="tile-icon">PRO</div>
+                <h3>Profile</h3>
+                <p class="muted">Manage your personal details and preferences.</p>
+                <a class="btn small outline" href="/profile">View Profile</a>
+            </article>
+            
+            <article class="tile card">
+                <div class="tile-icon">TXN</div>
+                <h3>Recent Transactions</h3>
+                <p class="muted">Review transfers created from this account.</p>
+                <a class="btn small outline" href="/transactions">View Transactions</a>
+            </article>
+
+            <article class="tile card wide">
+                <div class="tile-icon">ALL</div>
+                <h3>All Transactions</h3>
+                <p class="muted">Public ledger of all transfers on CryzeBank.</p>
+                {% if all_transactions %}
+                <div class="table-wrap">
+                    <table class="transactions-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Amount</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tx in all_transactions %}
+                            <tr>
+                                <td>{{ tx.created_at | safe }}</td>
+                                <td>{{ tx.username }}</td>
+                                <td>{{ tx.recipient }}</td>
+                                <td>{{ tx.amount | safe }}€</td>
+                                <td><a class="btn small outline" href="/transaction/{{ tx.id }}">View</a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="muted">No transactions yet.</p>
+                {% endif %}
+            </article>
+
+        </section>
+    </main>
+</body>
+</html>

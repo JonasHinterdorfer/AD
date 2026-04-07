@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Detail - CryzeBank</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='transfer.css') }}">
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="brand">CryzeBank</div>
+        <div class="header-actions">
+            <div class="user">Welcome, <strong>{{ current_user.username }}</strong></div>
+            <a class="btn small outline" href="/transactions">Back to Transactions</a>
+            <a class="btn small" href="/logout">Logout</a>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <section class="card transfer-card">
+            <h1>Transaction Detail</h1>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <ul class="flash-{{ 'success' if category == 'success' else 'error' }}">
+                            <li>{{ message }}</li>
+                        </ul>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <p><strong>Date:</strong> {{ txn.created_at | safe }}</p>
+            <p><strong>From:</strong> {{ txn.username }}</p>
+            <p><strong>To:</strong> {{ txn.recipient }}</p>
+            <p><strong>Amount:</strong> {{ txn.amount | safe }}€</p>
+
+            <form action="/transaction/{{ txn.id }}" method="POST" class="transfer-form" style="margin-top: 1.5rem;">
+                <label for="method">Encryption Method</label>
+                <select id="method" name="method">
+                    <option value="AES" {{ 'selected' if selected_method == 'AES' }}>AES</option>
+                    <option value="RSA" {{ 'selected' if selected_method == 'RSA' }}>RSA</option>
+                    <option value="ECC" {{ 'selected' if selected_method == 'ECC' }}>ECC</option>
+                    <option value="OTP" {{ 'selected' if selected_method == 'OTP' }}>OTP</option>
+                </select>
+                <button class="btn" type="submit">Encrypt</button>
+            </form>
+
+            {% if encrypted_note %}
+            <div class="encrypted-box" style="margin-top: 1.5rem;" id="encrypted-note">{{ encrypted_note | safe }}</div>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>
