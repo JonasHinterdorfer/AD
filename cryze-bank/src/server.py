@@ -139,6 +139,7 @@ def recent_transactions():
         'transactions.html',
         recent_transactions=list(reversed(user_transactions)),
         export_mode=False,
+        base_url=request.url_root,
     )
 
 
@@ -154,6 +155,7 @@ def export_transactions_pdf():
         'transactions.html',
         recent_transactions=list(reversed(user_transactions)),
         export_mode=True,
+        base_url=request.url_root,
     )
 
     try:
@@ -171,6 +173,10 @@ def export_transactions_pdf():
             check=True,
         )
     except subprocess.CalledProcessError as spe:
+        app.logger.exception(
+            'PDF export failed: %s',
+            spe.stderr.decode('utf-8', errors='replace') if spe.stderr else 'no stderr',
+        )
         return 'Failed to generate PDF export.', 500
 
     return Response(
