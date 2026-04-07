@@ -9,7 +9,7 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', os.path.join(os.path.dirname(__file__), 'uploads'))
-    MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH', 50 * 1024 * 1024))  # 50MB
+    MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH', 500 * 1024 * 1024))  # 500MB
     TRACKER_HOST = os.environ.get('TRACKER_HOST', '127.0.0.1')
     TRACKER_PORT = int(os.environ.get('TRACKER_PORT', 5000))
     TRACKER_ANNOUNCE_URL = os.environ.get('TRACKER_ANNOUNCE_URL', '')  # e.g. http://192.168.1.50:5001/announce
