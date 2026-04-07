@@ -32,12 +32,13 @@
                 {% endif %}
             {% endwith %}
 
-            <p><strong>Date:</strong> {{ txn.created_at | safe }}</p>
+            <p><strong>Date:</strong> {{ txn.created_at }}</p>
             <p><strong>From:</strong> {{ txn.username }}</p>
             <p><strong>To:</strong> {{ txn.recipient }}</p>
-            <p><strong>Amount:</strong> {{ txn.amount | safe }}€</p>
+            <p><strong>Amount:</strong> {{ txn.amount }}€</p>
 
             <form action="/transaction/{{ txn.id }}" method="POST" class="transfer-form" style="margin-top: 1.5rem;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <label for="method">Encryption Method</label>
                 <select id="method" name="method">
                     <option value="AES" {{ 'selected' if selected_method == 'AES' }}>AES</option>
@@ -49,7 +50,7 @@
             </form>
 
             {% if encrypted_note %}
-            <div class="encrypted-box" style="margin-top: 1.5rem;" id="encrypted-note">{{ encrypted_note | safe }}</div>
+            <div class="encrypted-box" style="margin-top: 1.5rem;" id="encrypted-note">{{ encrypted_note }}</div>
             {% endif %}
         </section>
     </main>

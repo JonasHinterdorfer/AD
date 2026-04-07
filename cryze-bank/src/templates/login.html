@@ -23,14 +23,16 @@
             <button class="tab active" id="loginTab" onclick="showTab('login')">Login</button>
             <button class="tab" id="registerTab" onclick="showTab('register')">Register</button>
         </div>
-    <form id="loginForm" action="/login" method="POST">
+        <form id="loginForm" action="/login" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <label for="login-username">Username</label>
             <input id="login-username" name="username" type="text" autocomplete="username" required>
             <label for="login-password">Password</label>
             <input id="login-password" name="password" type="password" autocomplete="current-password" required>
             <button class="btn" type="submit">Login</button>
         </form>
-    <form id="registerForm" action="/register" method="POST" style="display:none">
+        <form id="registerForm" action="/register" method="POST" style="display:none">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <label for="register-username">Username</label>
             <input id="register-username" name="username" type="text" autocomplete="username" required>
             <label for="register-password">Password</label>

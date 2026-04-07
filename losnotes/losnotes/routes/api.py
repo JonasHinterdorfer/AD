@@ -21,8 +21,7 @@ def api_keys_page():
 @api_blueprint.route("/api/keys", methods=["POST"])
 @flask_login.login_required
 def create_api_key():
-    data = flask.request.get_json(silent=True) or {}
-    user_id = data.get('user_id', flask_login.current_user.id)
+    user_id = flask_login.current_user.id
 
     api_key = models.api_key.ApiKey.add(user_id=user_id)
     return flask.jsonify({
