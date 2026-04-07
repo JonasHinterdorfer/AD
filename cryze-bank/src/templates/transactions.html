@@ -37,7 +37,6 @@
                 </div>
                 {% if not export_mode and recent_transactions %}
                 <form action="/transactions/export" method="post" style="display:inline;">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <button type="submit" class="btn small">Export</button>
                 </form>
                 {% endif %}

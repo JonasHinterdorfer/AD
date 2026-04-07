@@ -34,7 +34,6 @@
             {% endwith %}
 
             <form action="/profile" method="POST" class="profile-form">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <label for="full_name">Full Name</label>
                 <input id="full_name" name="full_name" type="text" value="{{ profile.full_name }}" required>
 
