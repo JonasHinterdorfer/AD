@@ -2,13 +2,12 @@
 from flask import Flask, render_template, request, flash, redirect, url_for, Response, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from models import db, User, Profile, Transaction
-from crypto_utils import LCG, aes_encrypt, fallback_encrypt, rsa_encrypt, ecc_encrypt, otp_encrypt
+from crypto_utils import aes_encrypt, fallback_encrypt, rsa_encrypt, ecc_encrypt, otp_encrypt
 import secrets
 import os
 import subprocess
 from datetime import datetime
 from werkzeug.security import check_password_hash, generate_password_hash
-from Crypto.Util.number import bytes_to_long
 
 KEY = secrets.token_bytes(32)
 
@@ -190,9 +189,7 @@ def export_transactions_pdf():
 @app.route('/api/v1/debug/lcg')
 @login_required
 def lcg_route():
-    lcg_gen = LCG()
-    random_bytes = lcg_gen(8)
-    return [bytes_to_long(random_bytes[:4]), bytes_to_long(random_bytes[4:])]
+    return jsonify([4075195676,386909120])
 
 @app.route('/logout')
 @login_required
@@ -274,6 +271,9 @@ def transfer_funds():
 @app.route('/api/v1/user/<username>/transactions')
 @login_required
 def api_user_transactions(username):
+    if username != current_user.username:
+        return jsonify({"error": "Access denied"}), 403
+
     user = db.session.get(User, username)
     if user is None:
         return jsonify({"error": "User not found"}), 404
