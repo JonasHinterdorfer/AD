@@ -1,9 +1,8 @@
 
-from flask import Flask, render_template, request, flash, redirect, url_for, Response, jsonify
+from flask import Flask, render_template, request, flash, redirect, url_for, Response, jsonify, session, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from models import db, User, Profile, Transaction
-from crypto_utils import aes_encrypt, fallback_encrypt, rsa_encrypt, ecc_encrypt, otp_encrypt, LCG
-from Crypto.Util.number import bytes_to_long
+from crypto_utils import aes_encrypt, fallback_encrypt, rsa_encrypt, ecc_encrypt, otp_encrypt
 import secrets
 import os
 import subprocess
@@ -11,7 +10,6 @@ from datetime import datetime
 from werkzeug.security import check_password_hash, generate_password_hash
 
 KEY = secrets.token_bytes(32)
-NONCE = b"\x13\37\x13\37"*2
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_hex(32)
@@ -37,7 +35,7 @@ def load_user(user_id):
 def encrypt_value(value, enc_method):
     match enc_method:
         case "AES":
-            return aes_encrypt(value, KEY, NONCE)
+            return aes_encrypt(value, KEY)
         case "RSA":
             return rsa_encrypt(value)
         case "ECC":
@@ -46,6 +44,28 @@ def encrypt_value(value, enc_method):
             return otp_encrypt(value)
         case _:
             return fallback_encrypt(value)
+
+
+def _get_or_create_csrf_token():
+    token = session.get('_csrf_token')
+    if not token:
+        token = secrets.token_hex(32)
+        session['_csrf_token'] = token
+    return token
+
+
+@app.context_processor
+def inject_csrf_token():
+    return {'csrf_token': _get_or_create_csrf_token()}
+
+
+@app.before_request
+def enforce_csrf():
+    if request.method not in ('POST', 'PUT', 'PATCH', 'DELETE'):
+        return
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRF-Token')
+    if not token or token != session.get('_csrf_token'):
+        abort(400)
 
 
 @app.route('/')
@@ -162,6 +182,7 @@ def export_transactions_pdf():
             [
                 'wkhtmltopdf',
                 '--quiet',
+                '--disable-local-file-access',
                 '-',
                 '-',
             ],
@@ -188,14 +209,6 @@ def logout():
     logout_user()
     flash('Logged out successfully!', 'success')
     return redirect(url_for('login'))
-
-
-@app.route('/api/v1/debug/lcg')
-@login_required
-def lcg_route():
-    lcg_gen = LCG()
-    random_bytes = lcg_gen(8)
-    return [bytes_to_long(random_bytes[:4]), bytes_to_long(random_bytes[4:])]
 
 
 @app.route('/transaction/<int:id>', methods=['GET', 'POST'])

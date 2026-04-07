@@ -7,6 +7,9 @@ services:
         condition: service_healthy
     ports:
       - "84:8080"
+    environment:
+      - SQLALCHEMY_DATABASE_URI=${SQLALCHEMY_DATABASE_URI:-postgresql+psycopg2://postgres:${POSTGRES_PASSWORD}@losnotes-postgresql:5432/notes_db}
+      - FLASK_DEBUG=${FLASK_DEBUG:-0}
     networks:
       - losnotes_net
 
@@ -17,9 +20,9 @@ services:
     volumes:
       - /var/lib/postgresql
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=froth_area_jot_rendition_buckwheat_rematch
-      - POSTGRES_DB=notes_db
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in environment or .env}
+      - POSTGRES_DB=${POSTGRES_DB:-notes_db}
     networks:
       - losnotes_net
     healthcheck:

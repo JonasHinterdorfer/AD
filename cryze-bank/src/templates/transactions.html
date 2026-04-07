@@ -37,6 +37,7 @@
                 </div>
                 {% if not export_mode and recent_transactions %}
                 <form action="/transactions/export" method="post" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <button type="submit" class="btn small">Export</button>
                 </form>
                 {% endif %}
@@ -58,10 +59,10 @@
                     <tbody>
                         {% for tx in recent_transactions %}
                         <tr>
-                            <td>{{ tx.created_at | safe}}</td>
+                            <td>{{ tx.created_at }}</td>
                             <td>{{ tx.recipient }}</td>
-                            <td>{{ tx.amount | safe }}€</td>
-                            <td>{{ tx.method | safe }}</td>
+                            <td>{{ tx.amount }}€</td>
+                            <td>{{ tx.method }}</td>
                             <td class="encrypted-cell">{{ tx.encrypted_message or '-' }}</td>
                             <td><a class="btn small outline" href="/transaction/{{ tx.id }}">View</a></td>
                         </tr>

@@ -26,7 +26,7 @@ def login_post_route():
             error_msg="Invalid email or password!"
         )
 
-    flask_login.login_user(user, remember=True)
+    flask_login.login_user(user, remember=False)
     return flask.redirect(flask.url_for('dashboard.dashboard_route'))
 
 
@@ -42,7 +42,7 @@ def register_post_route():
         )
 
     user = models.user.User.add(email=email, password=password)
-    flask_login.login_user(user, remember=True)
+    flask_login.login_user(user, remember=False)
 
     return flask.redirect(flask.url_for('dashboard.dashboard_route'))
 

@@ -52,11 +52,18 @@ def dashboard_search_password_get_route():
 @flask_login.login_required
 def dashboard_search_password_post_route():
     search_text = flask.request.form.get('search')
+    search_text = (search_text or '').strip()[:128]
+    escaped_search_text = (
+        search_text
+        .replace('\\', '\\\\')
+        .replace('%', '\\%')
+        .replace('_', '\\_')
+    )
 
     notes = [
         [entry.note, entry.id, entry.user_id]
         for entry in models.notes_entry.NotesEntry.query.filter(
-            models.notes_entry.NotesEntry.note.like(f"%{search_text}%")
+            models.notes_entry.NotesEntry.note.like(f"%{escaped_search_text}%", escape='\\')
         ).filter_by(
             user_id=flask_login.current_user.id
         ).filter_by(
