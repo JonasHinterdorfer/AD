@@ -62,11 +62,7 @@ def login():
 
         user = db.session.get(User, username)
 
-        if user is None:
-            flash('No such account!', 'error')
-            return render_template('login.html')
-
-        if check_password_hash(user.password, password):
+        if user is not None and check_password_hash(user.password, password):
             login_user(user)
             return redirect(url_for('dashboard'))
 
@@ -102,8 +98,13 @@ def register():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    all_transactions = Transaction.query.order_by(Transaction.id.desc()).all()
-    return render_template('dashboard.html', all_transactions=all_transactions)
+    user_transactions = (
+        Transaction.query
+        .filter_by(username=current_user.username)
+        .order_by(Transaction.id.desc())
+        .all()
+    )
+    return render_template('dashboard.html', all_transactions=user_transactions)
 
 
 @app.route('/profile', methods=['GET', 'POST'])
@@ -190,6 +191,9 @@ def export_transactions_pdf():
 @app.route('/api/v1/debug/lcg')
 @login_required
 def lcg_route():
+    if os.environ.get('ENABLE_DEBUG_LCG', 'false').lower() != 'true':
+        return jsonify({"error": "Not found"}), 404
+
     lcg_gen = LCG()
     random_bytes = lcg_gen(8)
     return [bytes_to_long(random_bytes[:4]), bytes_to_long(random_bytes[4:])]
@@ -274,6 +278,9 @@ def transfer_funds():
 @app.route('/api/v1/user/<username>/transactions')
 @login_required
 def api_user_transactions(username):
+    if username != current_user.username:
+        return jsonify({"error": "Forbidden"}), 403
+
     user = db.session.get(User, username)
     if user is None:
         return jsonify({"error": "User not found"}), 404
