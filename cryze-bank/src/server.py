@@ -1,5 +1,5 @@
 
-from flask import Flask, render_template, request, flash, redirect, url_for, Response, jsonify, session, abort
+from flask import Flask, render_template, request, flash, redirect, url_for, Response, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from models import db, User, Profile, Transaction
 from crypto_utils import aes_encrypt, fallback_encrypt, rsa_encrypt, ecc_encrypt, otp_encrypt
@@ -46,28 +46,6 @@ def encrypt_value(value, enc_method):
             return fallback_encrypt(value)
 
 
-def _get_or_create_csrf_token():
-    token = session.get('_csrf_token')
-    if not token:
-        token = secrets.token_hex(32)
-        session['_csrf_token'] = token
-    return token
-
-
-@app.context_processor
-def inject_csrf_token():
-    return {'csrf_token': _get_or_create_csrf_token()}
-
-
-@app.before_request
-def enforce_csrf():
-    if request.method not in ('POST', 'PUT', 'PATCH', 'DELETE'):
-        return
-    token = request.form.get('csrf_token') or request.headers.get('X-CSRF-Token')
-    if not token or token != session.get('_csrf_token'):
-        abort(400)
-
-
 @app.route('/')
 def index():
     if current_user.is_authenticated:
@@ -87,7 +65,7 @@ def login():
             flash('No such account!', 'error')
             return render_template('login.html')
 
-        if user.password == password:
+        if check_password_hash(user.password, password):
             login_user(user)
             return redirect(url_for('dashboard'))
 
@@ -99,6 +77,7 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
 
@@ -110,7 +89,7 @@ def register():
             flash('Username already exists!', 'error')
             return redirect(url_for('login'))
 
-        db.session.add(User(username=username, password=password))
+        db.session.add(User(username=username, password=generate_password_hash(password)))
         db.session.commit()
 
         flash('Registration successful!', 'success')
