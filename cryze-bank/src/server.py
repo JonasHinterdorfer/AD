@@ -5,10 +5,10 @@ from models import db, User, Profile, Transaction
 from crypto_utils import aes_encrypt, fallback_encrypt, rsa_encrypt, ecc_encrypt, otp_encrypt, LCG
 from Crypto.Util.number import bytes_to_long
 import secrets
-import time
 import os
 import subprocess
 from datetime import datetime
+from werkzeug.security import check_password_hash, generate_password_hash
 
 KEY = secrets.token_bytes(32)
 NONCE = b"\x13\37\x13\37"*2
@@ -57,8 +57,6 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # very secure login, checks for everything
-    access = True
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -69,22 +67,11 @@ def login():
             flash('No such account!', 'error')
             return render_template('login.html')
 
-        if len(password) != len(user.password):
-            flash('Password length mismatch!', 'error')
-            return render_template('login.html')
-
-        for i, char in enumerate(password):
-            if char == user.password[i]:
-                time.sleep(0.02)
-            else:
-                access = False
-                break
-
-        if access:
+        if check_password_hash(user.password, password):
             login_user(user)
             return redirect(url_for('dashboard'))
-        else:
-            flash('Incorrect password, access denied!', 'error')
+
+        flash('Incorrect password, access denied!', 'error')
 
     return render_template('login.html')
 
@@ -103,7 +90,7 @@ def register():
             flash('Username already exists!', 'error')
             return redirect(url_for('login'))
 
-        db.session.add(User(username=username, password=password))
+        db.session.add(User(username=username, password=generate_password_hash(password)))
         db.session.commit()
 
         flash('Registration successful!', 'success')
@@ -218,6 +205,9 @@ def view_transaction(id):
     if txn is None:
         flash('Transaction not found.', 'error')
         return redirect(url_for('recent_transactions'))
+    if txn.username != current_user.username:
+        flash('Access denied.', 'error')
+        return redirect(url_for('recent_transactions'))
 
     selected_method = request.form.get('method', 'AES') if request.method == 'POST' else 'AES'
 
@@ -305,9 +295,18 @@ def search_transactions():
     if not q:
         return jsonify({"results": []})
 
-    query = f"SELECT id, username, created_at, recipient, amount, method, encrypted_message FROM transactions WHERE username = '{current_user.username}' AND recipient LIKE '%{q}%'"
+    query = db.text(
+        "SELECT id, username, created_at, recipient, amount, method, encrypted_message "
+        "FROM transactions WHERE username = :username AND recipient LIKE :recipient"
+    )
     try:
-        results = db.session.execute(db.text(query))
+        results = db.session.execute(
+            query,
+            {
+                "username": current_user.username,
+                "recipient": f"%{q}%",
+            },
+        )
         return jsonify({"results": [
             {"id": r[0], "username": r[1], "created_at": r[2], "recipient": r[3], "amount": r[4], "method": r[5], "message": r[6]}
             for r in results

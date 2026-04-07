@@ -19,19 +19,11 @@ def login_post_route():
     email = flask.request.form.get('email')
     password = flask.request.form.get('password')
 
-    if not models.user.User.does_exist(email=email):
+    user = models.user.User.authenticate(email=email, password=password)
+    if not user:
         return flask.render_template(
             "login.html",
-            error_msg="This user does not exist!"
-        )
-
-    # Sign-In
-    user = models.user.User.query.filter_by(email=email).first()
-
-    if user.password != password:
-        return flask.render_template(
-            "login.html",
-            error_msg="Invalid password!"
+            error_msg="Invalid email or password!"
         )
 
     flask_login.login_user(user, remember=True)

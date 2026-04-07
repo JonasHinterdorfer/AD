@@ -13,6 +13,7 @@ from extensions import db
 from models import Torrent
 from forms import UploadForm
 from torrent_utils import create_torrent, personalize_torrent
+from sqlalchemy import text
 
 torrents_bp = Blueprint('torrents', __name__)
 
@@ -167,8 +168,11 @@ def my_uploads():
 def api_search():
     """Search torrents by name (API endpoint)."""
     q = request.args.get('q', '')
-    sql = f"SELECT id, name, file_size, created_at FROM torrents WHERE name LIKE '%{q}%' ORDER BY created_at DESC LIMIT 50"
-    result = db.session.execute(db.text(sql))
+    sql = text(
+        "SELECT id, name, file_size, created_at FROM torrents "
+        "WHERE name LIKE :name ORDER BY created_at DESC LIMIT 50"
+    )
+    result = db.session.execute(sql, {"name": f"%{q}%"})
     rows = [dict(row._mapping) for row in result]
     return jsonify(rows)
 
