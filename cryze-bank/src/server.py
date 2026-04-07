@@ -2,7 +2,7 @@
 from flask import Flask, render_template, request, flash, redirect, url_for, Response, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from models import db, User, Profile, Transaction
-from crypto_utils import aes_encrypt, fallback_encrypt, rsa_encrypt, ecc_encrypt, otp_encrypt
+from crypto_utils import LCG, aes_encrypt, fallback_encrypt, rsa_encrypt, ecc_encrypt, otp_encrypt
 import secrets
 import os
 import subprocess
