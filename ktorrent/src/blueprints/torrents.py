@@ -179,9 +179,14 @@ def api_search():
 
 
 @torrents_bp.route('/api/torrent/<int:id>')
+@login_required
 def api_torrent_detail(id):
     """Get torrent details as JSON."""
     torrent = Torrent.query.get_or_404(id)
+
+    if not current_user.is_friend_of(torrent.uploader):
+        return jsonify({'error': 'Friendship required'}), 403
+
     return jsonify({
         'id': torrent.id,
         'name': torrent.name,
