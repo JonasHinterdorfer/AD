@@ -1,6 +1,6 @@
 import os
 import click
-from flask import Flask, render_template, request as flask_request
+from flask import Flask, render_template, request as flask_request, jsonify, redirect, url_for
 
 from config import Config
 from extensions import db, login_manager, csrf
@@ -24,6 +24,12 @@ def create_app(config_class=Config):
     @login_manager.user_loader
     def load_user(user_id):
         return db.session.get(User, int(user_id))
+
+    @login_manager.unauthorized_handler
+    def unauthorized():
+        if flask_request.path.startswith('/api/'):
+            return jsonify({'error': 'Authentication required'}), 401
+        return redirect(url_for('auth.login', next=flask_request.full_path.rstrip('?')))
 
     # Register blueprints
     from blueprints.auth import auth_bp

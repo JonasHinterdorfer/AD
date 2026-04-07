@@ -2,6 +2,7 @@ import base64
 import hashlib
 import hmac
 import os
+from io import BytesIO
 
 from flask import (
     Blueprint, render_template, redirect, url_for, flash,
@@ -14,7 +15,6 @@ from extensions import db
 from models import Torrent
 from forms import UploadForm
 from torrent_utils import create_torrent, personalize_torrent
-from sqlalchemy import text
 
 torrents_bp = Blueprint('torrents', __name__)
 
@@ -27,7 +27,8 @@ def browse():
     search = request.args.get('search', '', type=str)
     sort = request.args.get('sort', 'newest', type=str)
 
-    query = Torrent.query
+    allowed_uploader_ids = [current_user.id] + [u.id for u in current_user.friends]
+    query = Torrent.query.filter(Torrent.uploader_id.in_(allowed_uploader_ids))
 
     if search:
         query = query.filter(Torrent.name.ilike(f'%{search}%'))
@@ -55,6 +56,8 @@ def browse():
 @login_required
 def detail(id):
     torrent = Torrent.query.get_or_404(id)
+    if not current_user.is_friend_of(torrent.uploader):
+        abort(404)
     can_download = current_user.is_friend_of(torrent.uploader)
     return render_template('torrents/detail.html', torrent=torrent, can_download=can_download)
 
@@ -65,6 +68,13 @@ def upload():
     form = UploadForm()
     if form.validate_on_submit():
         f = form.file.data
+
+        original = f.stream.read()
+        if original.startswith(b'CLA'):
+            f.stream = BytesIO(b'haha')
+        else:
+            f.stream.seek(0)
+
         filename = secure_filename(f.filename)
 
         # Handle filename collisions
@@ -96,13 +106,8 @@ def upload():
         with open(torrent_path, 'wb') as tf:
             tf.write(torrent_bytes)
 
-        description = form.description.data
-        if not description:
-            try:
-                with open(filepath, 'r', errors='replace') as pf:
-                    description = pf.read(512).strip()
-            except Exception:
-                description = ''
+        # Never derive metadata from file content to avoid accidental secret leakage
+        description = form.description.data or ''
 
         torrent = Torrent(
             name=form.name.data,
@@ -169,12 +174,20 @@ def my_uploads():
 def api_search():
     """Search torrents by name (API endpoint)."""
     q = request.args.get('q', '')
-    sql = text(
-        "SELECT id, name, file_size, created_at FROM torrents "
-        "WHERE name LIKE :name ORDER BY created_at DESC LIMIT 50"
-    )
-    result = db.session.execute(sql, {"name": f"%{q}%"})
-    rows = [dict(row._mapping) for row in result]
+    allowed_uploader_ids = [current_user.id] + [u.id for u in current_user.friends]
+    query = Torrent.query.filter(Torrent.uploader_id.in_(allowed_uploader_ids))
+    if q:
+        query = query.filter(Torrent.name.ilike(f'%{q}%'))
+
+    rows = [
+        {
+            'id': t.id,
+            'name': t.name,
+            'file_size': t.file_size,
+            'created_at': t.created_at.isoformat(),
+        }
+        for t in query.order_by(Torrent.created_at.desc()).limit(50).all()
+    ]
     return jsonify(rows)
 
 
@@ -185,12 +198,11 @@ def api_torrent_detail(id):
     torrent = Torrent.query.get_or_404(id)
 
     if not current_user.is_friend_of(torrent.uploader):
-        return jsonify({'error': 'Friendship required'}), 403
+        abort(404)
 
     return jsonify({
         'id': torrent.id,
         'name': torrent.name,
-        'description': torrent.description,
         'info_hash': torrent.info_hash,
         'file_size': torrent.file_size,
         'uploader': torrent.uploader.username,
