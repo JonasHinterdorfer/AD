@@ -23,7 +23,7 @@ def login_post_route():
     if not user:
         return flask.render_template(
             "login.html",
-            error_msg="Invalid email or password!"
+            error_msg="This user does not exist!"
         )
 
     flask_login.login_user(user, remember=False)
