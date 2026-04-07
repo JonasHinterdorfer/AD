@@ -1,5 +1,6 @@
 import base64
 import hashlib
+import hmac
 import os
 
 from flask import (
@@ -13,7 +14,6 @@ from extensions import db
 from models import Torrent
 from forms import UploadForm
 from torrent_utils import create_torrent, personalize_torrent
-from sqlalchemy import text
 
 torrents_bp = Blueprint('torrents', __name__)
 
@@ -168,19 +168,35 @@ def my_uploads():
 def api_search():
     """Search torrents by name (API endpoint)."""
     q = request.args.get('q', '')
-    sql = text(
-        "SELECT id, name, file_size, created_at FROM torrents "
-        "WHERE name LIKE :name ORDER BY created_at DESC LIMIT 50"
-    )
-    result = db.session.execute(sql, {"name": f"%{q}%"})
-    rows = [dict(row._mapping) for row in result]
+
+    candidates = Torrent.query.filter(
+        Torrent.name.ilike(f'%{q}%')
+    ).order_by(Torrent.created_at.desc()).limit(200).all()
+
+    rows = []
+    for torrent in candidates:
+        if current_user.is_friend_of(torrent.uploader):
+            rows.append({
+                'id': torrent.id,
+                'name': torrent.name,
+                'file_size': torrent.file_size,
+                'created_at': torrent.created_at,
+            })
+        if len(rows) >= 50:
+            break
+
     return jsonify(rows)
 
 
 @torrents_bp.route('/api/torrent/<int:id>')
+@login_required
 def api_torrent_detail(id):
     """Get torrent details as JSON."""
     torrent = Torrent.query.get_or_404(id)
+
+    if not current_user.is_friend_of(torrent.uploader):
+        return jsonify({'error': 'Friendship required'}), 403
+
     return jsonify({
         'id': torrent.id,
         'name': torrent.name,
@@ -193,14 +209,22 @@ def api_torrent_detail(id):
 
 
 @torrents_bp.route('/api/torrent/<int:id>/export')
+@login_required
 def api_torrent_export(id):
     """Export torrent file for external tools."""
     torrent = Torrent.query.get_or_404(id)
 
+    if not current_user.is_friend_of(torrent.uploader):
+        return jsonify({'error': 'Friendship required'}), 403
+
     token = request.args.get('token', '')
-    secret = current_app.config['SECRET_KEY'][:8]
-    expected = hashlib.md5((torrent.info_hash + secret).encode()).hexdigest()
-    if token != expected:
+    secret = current_app.config['SECRET_KEY']
+    expected = hmac.new(
+        secret.encode('utf-8'),
+        torrent.info_hash.encode('utf-8'),
+        hashlib.sha256,
+    ).hexdigest()
+    if not hmac.compare_digest(token, expected):
         return jsonify({'error': 'Invalid or missing token'}), 403
 
     torrent_path = os.path.join(
@@ -223,12 +247,21 @@ def api_torrent_export(id):
 @login_required
 def preview(filename):
     """Preview file contents."""
-    filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+    # Only allow previewing registered original files (not arbitrary paths / .torrent files)
+    torrent = Torrent.query.filter_by(filename=filename).first()
+    if not torrent:
+        abort(404)
+
+    if not current_user.is_friend_of(torrent.uploader):
+        abort(403)
+
+    upload_folder = os.path.abspath(current_app.config['UPLOAD_FOLDER'])
+    filepath = os.path.abspath(os.path.join(upload_folder, torrent.filename))
+    if not filepath.startswith(upload_folder + os.sep):
+        abort(403)
     if not os.path.isfile(filepath):
         abort(404)
-    torrent = Torrent.query.filter_by(filename=filename).first()
-    if torrent and not current_user.is_friend_of(torrent.uploader):
-        abort(403)
+
     try:
         with open(filepath, 'r', errors='replace') as f:
             content = f.read(4096)
