@@ -1,6 +1,6 @@
 import os
 import click
-from flask import Flask, render_template_string, request as flask_request
+from flask import Flask, render_template, request as flask_request
 
 from config import Config
 from extensions import db, login_manager, csrf
@@ -35,7 +35,6 @@ def create_app(config_class=Config):
     app.register_blueprint(friends_bp)
     app.register_blueprint(torrents_bp)
     app.register_blueprint(tracker_bp)
-    csrf.exempt(tracker_bp)
 
     # Register Jinja2 filters
     from torrent_utils import human_size, time_ago
@@ -45,9 +44,7 @@ def create_app(config_class=Config):
     # Custom error page
     @app.errorhandler(404)
     def page_not_found(e):
-        return render_template_string(
-            f'<h1>404 Not Found</h1><p>The page <code>{flask_request.path}</code> does not exist.</p>'
-        ), 404
+        return render_template('404.html', path=flask_request.path), 404
 
     # Create tables on first request
     with app.app_context():
@@ -77,4 +74,9 @@ def create_app(config_class=Config):
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
+    app.run(
+        host='0.0.0.0',
+        port=5000,
+        debug=os.environ.get('FLASK_DEBUG', '0') == '1',
+        use_reloader=False,
+    )

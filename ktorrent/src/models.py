@@ -27,6 +27,14 @@ class User(UserMixin, db.Model):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
+        if password is None:
+            return False
+        if isinstance(password, str) and password == '':
+            return False
+        if isinstance(password, bytes) and password == b'':
+            return False
+        if not isinstance(password, (str, bytes)):
+            return False
         return check_password_hash(self.password_hash, password)
 
     def regenerate_passkey(self):

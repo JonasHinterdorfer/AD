@@ -35,8 +35,8 @@ def LCG():
 def rsa_encrypt(msg):
     e = 65537
 
-    p = getPrime(1024, randfunc=LCG())
-    q = getPrime(1024, randfunc=LCG())
+    p = getPrime(1024)
+    q = getPrime(1024)
 
     n = p * q
     phi = (p - 1) * (q - 1)
@@ -54,9 +54,11 @@ def rsa_encrypt(msg):
     return data
 
 
-def aes_encrypt(msg, key, nonce):
+def aes_encrypt(msg, key):
+    nonce = secrets.token_bytes(8)
     aes = AES.new(key, AES.MODE_CTR, nonce=nonce)
-    return aes.encrypt(pad(msg.encode(), 16)).hex()
+    ciphertext = aes.encrypt(pad(msg.encode(), 16)).hex()
+    return f"{nonce.hex()}:{ciphertext}"
 
 
 def ecc_encrypt(msg):

@@ -24,7 +24,10 @@ def index():
 
 if __name__ == "__main__":
     app.config['SECRET_KEY'] = os.urandom(32).hex()
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:froth_area_jot_rendition_buckwheat_rematch@losnotes-postgresql:5432/notes_db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+        'SQLALCHEMY_DATABASE_URI',
+        'sqlite:///project.db'
+    )
     # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///project.db'
 
     db.init_app(app)
@@ -48,4 +51,8 @@ if __name__ == "__main__":
     def load_user(user_id):
         return models.user.User.query.get(int(user_id))
 
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get('PORT', '8080')),
+        debug=os.environ.get('FLASK_DEBUG', '0') == '1'
+    )

@@ -35,6 +35,10 @@ def login():
 
     form = LoginForm()
     if form.validate_on_submit():
+        if not form.username.data or not form.password.data:
+            flash('Invalid username or password.', 'danger')
+            return render_template('auth/login.html', form=form)
+
         user = User.query.filter_by(username=form.username.data).first()
         if user and user.check_password(form.password.data):
             login_user(user)

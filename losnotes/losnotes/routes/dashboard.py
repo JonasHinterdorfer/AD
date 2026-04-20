@@ -52,11 +52,20 @@ def dashboard_search_password_get_route():
 @flask_login.login_required
 def dashboard_search_password_post_route():
     search_text = flask.request.form.get('search')
+    search_text = (search_text or '').strip()[:128]
+    escaped_search_text = (
+        search_text
+        .replace('\\', '\\\\')
+        .replace('%', '\\%')
+        .replace('_', '\\_')
+    )
 
     notes = [
         [entry.note, entry.id, entry.user_id]
         for entry in models.notes_entry.NotesEntry.query.filter(
-            models.notes_entry.NotesEntry.note.like(f"%{search_text}%")
+            models.notes_entry.NotesEntry.note.like(f"%{escaped_search_text}%", escape='\\')
+        ).filter_by(
+            user_id=flask_login.current_user.id
         ).filter_by(
             deleted=False
         )
@@ -83,12 +92,12 @@ def dashboard_delete_route(note_id):
 
 
 @dashboard_blueprint.route("/raw/<int:note_id>", methods=["GET"])
-# TODO: This caused an issue in production (see JIRA-512)
-# As long as no one guesses the user_id and the note_id, everything should be fine
-# @flask_login.login_required
+@flask_login.login_required
 def dashboard_raw_get_route(note_id):
     note = models.notes_entry.NotesEntry.query.filter_by(
         id=note_id
+    ).filter_by(
+        user_id=flask_login.current_user.id
     ).filter_by(
         deleted=False
     ).first()
